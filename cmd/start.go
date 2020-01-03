@@ -16,10 +16,12 @@ limitations under the License.
 package cmd
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"mqtt-ipfs/ipfs"
 	"mqtt-ipfs/mqtt"
+	"os"
 	"sync"
 	"time"
 
@@ -71,10 +73,11 @@ func init() {
 		err := client.Subscribe(func(c *mqtt.Client, msg *mqtt.Message) {
 			fmt.Printf("Got message: %+v \n", msg)
 
-			s := fmt.Sprintln("Got message: %+v \n", msg)
+			s := fmt.Sprintln(msg)
 
 			hash := ipfs.UploadIPFS(s)
 			fmt.Println("Hash for ", msg, "is :", hash)
+			fmt.Println()
 
 			wg.Done()
 		}, 1, "mqtt")
@@ -85,14 +88,42 @@ func init() {
 	}()
 
 	msg := &mqtt.Message{
-		ClientID: clientId,
-		Type:     "text",
-		Data:     "Hello Pibistar",
-		//Time:     int64(time.Now().Second()),
+		ClientID: "Client ID: " + clientId,
+		Type:     "Message Type: " + "text",
+		//Data:     "Hello Pibistar",
+		//Time:     time.Now().UTC(),
 	}
 
-	for i := 0; i < 5; i++ {
-		msg.Time = time.Now().Unix()
+	/*for i := 0; i < 5; i++ {
+		msg.Time = time.Now().UTC()
+		data, _ := json.Marshal(msg)
+
+		time.Sleep(time.Duration(1) * time.Second)
+		wg.Add(1)
+		err = client.Publish("mqtt", 1, false, data)
+		if err != nil {
+			fmt.Println(err)
+			panic(err)
+		}
+	}*/
+
+	for {
+		time.Sleep(time.Duration(500) * time.Millisecond)
+		fmt.Println("Please enter the message that you want to save on IPFS:")
+		//fmt.Scanln(&msg.Data)
+
+		//msg.Data = bufio.NewScanner(os.Stdin).Text()
+
+		inputReader := bufio.NewReader(os.Stdin)
+		inputData, err := inputReader.ReadString('\n')
+		if err != nil {
+			fmt.Println("There were errors reading, exiting program.")
+			return
+		}
+
+		msg.Data = "Message: " + inputData
+
+		msg.Time = "Timestamp: " + time.Now().UTC().String()
 		data, _ := json.Marshal(msg)
 
 		time.Sleep(time.Duration(1) * time.Second)
@@ -103,6 +134,7 @@ func init() {
 			panic(err)
 		}
 	}
+
 
 	time.Sleep(time.Duration(1) * time.Second)
 	wg.Wait()

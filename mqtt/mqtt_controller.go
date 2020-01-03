@@ -26,7 +26,7 @@ type Message struct {
 	ClientID string `json:"clientId"`
 	Type     string `json:"type"`
 	Data     string `json:"data,omitempty"`
-	Time     int64  `json:"time"`
+	Time     string  `json:"time"`
 }
 
 func NewClient(clientId string) *Client {
@@ -41,11 +41,11 @@ func NewClient(clientId string) *Client {
 		SetPingTimeout(10 * time.Second).
 		SetWriteTimeout(10 * time.Second).
 		SetOnConnectHandler(func(client gomqtt.Client) {
-			// 连接被建立后的回调函数
+			// 連接被建立後的回調函數
 			fmt.Println("Mqtt is connected!", "clientId", clientId)
 		}).
 		SetConnectionLostHandler(func(client gomqtt.Client, err error) {
-			// 连接被关闭后的回调函数
+			// 連接被關閉後的回調函數
 			fmt.Println("Mqtt is disconnected!", "clientId", clientId, "reason", err.Error())
 		})
 
